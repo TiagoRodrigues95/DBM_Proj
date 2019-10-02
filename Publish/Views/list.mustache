@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="/css/main.css">
+        <title>{{title}}</title>
+    </head>
+    <body>      
+        {{>menu}}
+        <div class="content">
+        <button onclick="window.location.href = '{{title}}/insert';" >Insert New</button>
+        <input type="text" id="inputSearch" onkeyup = "javascript:search()" placeholder= "Search for...">
+            <table id="table">
+                <tr>
+                    {{#columns}}
+                    <th>{{.}}</th>
+                    {{/columns}}
+                </tr>
+                {{#rows}}
+                <tr>
+                    {{#properties}}
+                    <td class="{{name}}">
+                        {{value}}
+                    </td>
+                    {{/properties}}
+                    {{#actions}}
+                        <td>
+                            <a href="{{link}}" title="{{tooltip}}" {{#events}}{{name}}="javascript:{{function}}({{args}})" {{/events}}>
+                                {{#image}}
+                                    <img src="{{src}}" alt="{{alt}}" />
+                                {{/image}}
+                            </a>
+                        </td>
+                    {{/actions}}
+                    
+                </tr>
+                {{/rows}}
+            </table>
+        </div>
+        <script type = "text/javascript">
+        function deleteRow(id){
+                let xhr = new XMLHttpRequest();
+                xhr.open("DELETE", "/../../api/{{title}}/"+id, true);
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                       location.reload();
+                  }
+                }
+              xhr.send();
+            }
+
+             function search() {
+                var input = document.getElementById("inputSearch");
+                var filterText = input.value.toUpperCase();
+                var table = document.getElementById("table");
+                var tr = table.getElementsByTagName("tr");
+                for (i = 0; i < tr.length; i++) {
+                    var td = tr[i].getElementsByClassName("{{searchTerm}}")[0];
+                    if (td) {
+                        var txtValue = td.textContent || td.innerText;
+                        if (txtValue.toUpperCase().indexOf(filterText) > -1) {
+                                tr[i].style.display = "";
+                        } else {
+                                tr[i].style.display = "none";
+                        }
+                    }
+                }
+            }
+        </script>
+    </body>
+</html>

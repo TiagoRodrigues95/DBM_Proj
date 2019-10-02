@@ -1,0 +1,84 @@
+var express = require('express');
+var router = express.Router();
+
+function mapping(object, type) {
+    var obj = new type();
+    Object.getOwnPropertyNames(object).forEach(function (value){
+        if(Object.getOwnPropertyNames(obj).includes(value)){//Se o objeto possuir o atributo que se está a verificar então recebe o valor retornado da query da base de dados
+            obj[value] = object[value];
+        }
+    });
+    return obj;
+}
+
+{{#schemas}}
+var {{classTitle}} = require('../Models/{{classTitle}}.js');
+{{/schemas}}
+
+
+
+{{#schemas}}
+/*
+    Insere um objeto {{classTitle}} na base de dados
+*/
+router.post('/{{classTitle}}', function (req, res) {
+    var obj = mapping(req.body, {{classTitle}});
+    obj.save(function(err) {
+        console.log(err);
+        res.sendStatus(200);
+    });
+});
+
+
+/*
+    recebe todos os objetos {{classTitle}} presentes na BD
+*/
+router.get('/{{classTitle}}', function (req, res) {
+    {{classTitle}}.all(function (rows) { //função de callback que quando for retornado os dados na base de dados
+ //, os mesmos serão enviados em json
+        res.json(rows);
+    });
+});
+
+/*
+    recebe um objeto {{classTitle}} da base de dados a partir do seu id 
+*/
+router.get('/{{classTitle}}/:id', function (req, res) {
+    if(req.params.id){
+        {{classTitle}}.get(req.params.id , function (rows) { //função de callback que quando for retornado os dados na base de dados
+ //, os mesmos serão enviados em json
+            res.json(rows);
+        });
+    }
+});
+
+/*
+    atualiza um objeto {{classTitle}} com os valores recebidos
+*/
+router.put('/{{classTitle}}/:id', function (req, res) {
+    var obj = mapping(req.body, {{classTitle}});
+    obj.id = req.params.id;
+    obj.save(function(err) {
+        res.sendStatus(200);
+    });
+});
+
+/*
+    Apaga um objeto {{classTitle}} da base de dados através do seu id
+*/
+router.delete('/{{classTitle}}/:id', function (req, res) {
+ {{classTitle}}.delete(req.params.id, function(err){
+     console.log(err);
+     res.sendStatus(200);
+ });
+});
+
+router.get('/{{classTitle}}/:model/:id', function (req, res) {
+    {{classTitle}}.many(req.params.model, req.params.id, function (rows) {
+        res.json(rows);
+    });
+});
+
+{{/schemas}}
+
+module.exports = router;

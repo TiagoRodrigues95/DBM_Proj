@@ -1,0 +1,321 @@
+var express = require('express');
+var router = express.Router();
+var fs = require('fs');
+var mustacheExpress = require("mustache-express");
+
+function mapping(object, type) {
+    var obj = new type();
+    Object.getOwnPropertyNames(object).forEach(function (value){
+        if(obj.hasOwnProperty(value)){//Se o objeto possuir o atributo que se 
+        //está a verificar então recebe o valor retornado da query da base de dados
+            obj[value] = object[value];
+        }
+    });
+    return obj;
+}
+
+{{#schemas}}
+var {{name}} = require('../Models/{{name}}.js');
+var {{name}}Schema= require('../Schemas/'+ '{{name}}'.toLowerCase() +'-schema.json');
+{{/schemas}}
+
+
+
+{{#schemas}}
+/*
+    renderiza uma página que realiza listagem todos os objetos {{name}}
+*/
+router.get('/{{name}}', function (req, res) {
+
+    {{name}}.all(function(rows){
+        res.render('list.mustache', {
+            title: "{{name}}",
+            columns: Object.keys(new {{name}}()),
+            searchTerm: {{name}}Schema.searchProperty,
+            rows: rows.map(row => {
+                return {
+                    properties: Object.keys(row).map(key => {
+                        return {
+                            name:key,
+                            value:row[key]
+                        }
+                    }),
+                    actions: [{
+                        link: '{{name}}/details/' + row.id,
+                        image: { src: '/../../images/read.png', alt: 'read' },
+                        tooltip: 'Details'
+                    }, {
+                        link: '{{name}}/edit/' + row.id,
+                        image: { src: '/../../images/edit.png', alt: 'edit' },
+                        tooltip: 'Edit'
+                    }, {
+                        link: '#',
+                        image: { src: '/../../images/delete.png', alt: 'delete' },
+                        tooltip: 'Delete',
+                        events: [{
+                            name: "onclick",
+                            function: "deleteRow",
+                            args: row.id
+                        }]
+                    }]
+                }
+            }),
+            schemas: function(){
+                    var array = [];
+                    {{#schemas}}
+                    array.push({
+                        name:"{{name}}",
+                        href:"./{{name}}"
+                    });
+                    {{/schemas}}
+                    return array;
+                }
+        });
+    });
+});
+
+router.get('/{{name}}/details/:id', function (req, res) {
+
+    {{name}}.get(req.params.id,function(rows){
+        if(!rows || rows.length!=1){
+            res.sendStatus(404); 
+        }
+        else{
+            let row=rows[0];//should do some check
+            res.render('details.mustache', {
+                title: "{{name}}",
+                properties: function () {
+                    var allProps = Object.getOwnPropertyNames(row);
+                    var validProps = [];
+                    allProps.forEach(function (prop) {
+                        if ({{name}}Schema.properties.hasOwnProperty(prop)) {
+                            validProps.push({
+                                name: prop,                                  
+                                value: row[prop]
+                            });
+                        }
+                    });
+                    return validProps;
+                },
+                references: function () {
+                    var allRefs = [];
+                    if ({{name}}Schema.references) {
+                        {{name}}Schema.references.forEach(function (ref) {
+                            allRefs.push({
+                                label: ref.label,
+                                model: ref.model,
+                                values: function(){
+                                    return row[(ref.model + "_id").toLowerCase()]
+                                }
+                            });
+                        });
+                    }
+                    return allRefs;
+                },
+                get hasReferences() {
+                    return this.references().length > 0;
+                },
+                schemas: function(){
+                    var array = [];
+                    {{#schemas}}
+                    array.push({
+                        name:"{{name}}",
+                        href:"../../{{name}}"
+                    });
+                    {{/schemas}}
+                    return array;
+                }
+            })
+            
+        }
+    });
+});
+
+router.get('/{{name}}/insert', function (req, res) {
+    var newObj = new {{name}}();
+    res.render('form.mustache', {
+        title: "{{name}}",
+        properties:  function () {
+                var allProps = Object.getOwnPropertyNames({{name}}Schema.properties);
+                var validProps = [];
+                allProps.forEach(function (prop) {
+                    if ({{name}}Schema.properties.hasOwnProperty(prop)) {
+                        validProps.push({
+                            name: prop,                                  
+                            value: "",
+                            type: function(){
+                                if(!{{name}}Schema.properties[prop].type){
+                                    return "text";
+                                }
+                                else{
+                                    return {{name}}Schema.properties[prop].type;
+                                }
+                            },
+                            pattern: function(){
+                                if({{name}}Schema.properties[prop].pattern){
+                                    return "pattern = "+{{name}}Schema.properties[prop].pattern;
+                                }
+                            },
+                            minlength: function(){
+                                if({{name}}Schema.properties[prop].minLength){
+                                    return "minlength = "+{{name}}Schema.properties[prop].minLength;
+                                }
+                            },
+                            maxlength: function(){
+                                if({{name}}Schema.properties[prop].maxLength){
+                                    return "maxlength = "+{{name}}Schema.properties[prop].maxLength;
+                                }
+                            },
+                            min: function(){
+                                if({{name}}Schema.properties[prop].minimum){
+                                    return "min = " +{{name}}Schema.properties[prop].minimum;
+                                }
+                            },
+                            max: function(){
+                                if({{name}}Schema.properties[prop].maximum){
+                                    return "max = "+{{name}}Schema.properties[prop].maximum;
+                                }
+                            },
+                            required: function(){
+                                var required = {{name}}Schema.required;
+                                if(required.includes(prop)){
+                                            return "required";
+                                }
+                            }
+                        });
+                    }
+                });
+                return validProps;
+        },
+        references: function () {
+            var allRefs = [];
+            if ({{name}}Schema.references) {
+                {{name}}Schema.references.forEach(function (ref) {
+                    allRefs.push({
+                        label: ref.label,
+                        model: ref.model,
+                        isMM: (ref.relation === "M-M"),
+                        values: []
+                    });
+                });
+            }
+            return allRefs;
+        },
+        get hasReferences() {
+            return this.references().length > 0;
+        },
+        method:"post",
+        schemas: function(){
+                    var array = [];
+                    {{#schemas}}
+                    array.push({
+                        name:"{{name}}",
+                        href:"../{{name}}"
+                    });
+                    {{/schemas}}
+                    return array;
+                }
+    })
+    
+});
+
+router.get('/{{name}}/edit/:id', function (req, res) {
+    {{name}}.get(req.params.id,function(rows){
+        if(!rows || rows.length!=1){
+            res.sendStatus(404); 
+        }
+        else{
+            let row=rows[0];//should do some check
+            res.render('form.mustache', {
+                title: "{{name}}",
+                properties:  function () {
+                        var allProps = Object.getOwnPropertyNames({{name}}Schema.properties);
+                        var validProps = [];
+                        allProps.forEach(function (prop) {
+                            if ({{name}}Schema.properties.hasOwnProperty(prop)) {
+                                validProps.push({
+                                    name: prop,                                  
+                                    value: row[prop],
+                                    type: function(){
+                                        if(!{{name}}Schema.properties[prop].type){
+                                            return "text";
+                                        }
+                                        else{
+                                            return {{name}}Schema.properties[prop].type;
+                                        }
+                                    },
+                                    pattern: function(){
+                                        if({{name}}Schema.properties[prop].pattern){
+                                            return "pattern = "+{{name}}Schema.properties[prop].pattern;
+                                        }
+                                    },
+                                    minlength: function(){
+                                        if({{name}}Schema.properties[prop].minLength){
+                                            return "minlength = "+{{name}}Schema.properties[prop].minLength;
+                                        }
+                                    },
+                                    maxlength: function(){
+                                        if({{name}}Schema.properties[prop].maxLength){
+                                            return "maxlength = "+{{name}}Schema.properties[prop].maxLength;
+                                        }
+                                    },
+                                    min: function(){
+                                        if({{name}}Schema.properties[prop].minimum){
+                                            return "min = " +{{name}}Schema.properties[prop].minimum;
+                                        }
+                                    },
+                                    max: function(){
+                                        if({{name}}Schema.properties[prop].maximum){
+                                            return "max = "+{{name}}Schema.properties[prop].maximum;
+                                        }
+                                    },
+                                    required: function(){
+                                        var required = {{name}}Schema.required;
+                                        if(required.includes(prop)){
+                                                    return "required";
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                        return validProps;
+                },
+                references: function () {
+                    var allRefs = [];
+                    if ({{name}}Schema.references) {
+                        {{name}}Schema.references.forEach(function (ref) {
+                            allRefs.push({
+                                label: ref.label,
+                                model: ref.model,
+                                isMM: (ref.relation === "M-M"),
+                                values: function(){
+                                    return (ref.relation === "M-M")?[]:row[(ref.model + "_id").toLowerCase()];
+                                }
+                                
+                            });
+                        });
+                    }
+                    return allRefs;
+                },
+                get hasReferences() {
+                    return this.references().length > 0;
+                },
+                method:"put",
+                id:req.params.id,
+                schemas: function(){
+                    var array = [];
+                    {{#schemas}}
+                    array.push({
+                        name:"{{name}}",
+                        href:"../../{{name}}"
+                    });
+                    {{/schemas}}
+                    return array;
+                }
+            });
+        }
+    });
+});
+{{/schemas}}
+
+module.exports=router;

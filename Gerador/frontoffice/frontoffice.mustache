@@ -1,0 +1,51 @@
+var express = require('express');
+var router = express.Router();
+var mustacheExpress = require("mustache-express");
+
+{{#schemas}}
+var {{name}} = require('../Models/{{name}}.js');
+var {{name}}Schema= require('../Schemas/'+ '{{name}}'.toLowerCase() +'-schema.json');
+{{/schemas}}
+
+router.get('/Home', function (req, res) {
+    {{#frontoffice}}
+    {{model}}.top("{{property}}","{{order}}", {{limit}}, function (rows) {
+        res.render('home.mustache', {
+            title:"{{model}}",
+            rows: rows.map(obj => {
+		        return {
+                    properties: Object.keys(obj).map(key => {
+                        return {
+                            name: key,
+                            value: obj[key]
+                        }
+                    })
+                }
+            }),
+            columns: Object.keys(new {{model}}()).map(key => {
+                return {
+                    name: key
+                }; 
+            }),
+            schemas:function(){
+                var array = [];
+                {{#schemas}}
+                array.push({
+                    name:"{{name}}",
+                    href:"./backoffice/{{name}}"
+                });
+                {{/schemas}}
+                return array;
+            }
+        });
+    });
+    {{/frontoffice}}
+    {{^frontoffice}}
+    
+    {{/frontoffice}}
+});
+router.get('*',function(req,res){
+    res.redirect('/Home');
+});
+
+module.exports = router;

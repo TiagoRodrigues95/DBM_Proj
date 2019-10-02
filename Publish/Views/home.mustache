@@ -1,0 +1,30 @@
+<html>
+    <head>
+    <title>Home</title>
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    </head>
+    <body>
+        {{>menu}}
+        <div class="content">
+        <h2>Top {{title}}</h2>
+        <table>
+            <tr>
+            {{#columns}}
+                <th>
+                {{name}}
+                </th>
+            {{/columns}}
+            </tr>
+            {{#rows}}
+            <tr>
+                {{#properties}}
+                <td>
+                    {{value}}
+                </td>
+                {{/properties}}
+            </tr> 
+            {{/rows}}
+        </table>
+        </div>
+    </body>
+</html>

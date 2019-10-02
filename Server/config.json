@@ -1,0 +1,76 @@
+{
+    "port": 8082,
+    "dbname": "projecto_fase1.db",
+    "schemas": [
+        {
+            "name": "Tag",
+            "Path": "./Gerador/schemas/tag-schema.json",
+            "href": "/backoffice/Tag"
+        },
+        {
+            "name": "Movie",
+            "Path": "./Gerador/schemas/movie-schema.json",
+            "href": "/backoffice/Movie"
+        },
+        {
+            "name": "Actor",
+            "Path": "./Gerador/schemas/actor-schema.json",
+            "href": "/backoffice/Actor"
+        },
+        {
+            "name": "Director",
+            "Path": "./Gerador/schemas/director-schema.json",
+            "href": "/backoffice/Director"
+        }
+    ],
+    "staticFiles": [
+        {
+            "originalPath": "./Gerador/staticFiles/sqlitedbm.js",
+            "destinationPath": "./Publish/Database/sqlitedbm.js"
+        },
+        {
+            "originalPath": "./Gerador/staticFiles/templates/list.mustache",
+            "destinationPath": "./Publish/Views/list.mustache"
+        },
+        {
+            "originalPath": "./Gerador/staticFiles/templates/details.mustache",
+            "destinationPath": "./Publish/Views/details.mustache"
+        },
+        {
+            "originalPath": "./Gerador/staticFiles/templates/form.mustache",
+            "destinationPath": "./Publish/Views/form.mustache"
+        },
+        {
+            "originalPath": "./Gerador/staticFiles/templates/menu.mustache",
+            "destinationPath": "./Publish/Views/menu.mustache"
+        },
+        {
+            "originalPath": "./Gerador/staticFiles/templates/home.mustache",
+            "destinationPath": "./Publish/Views/home.mustache"
+        },
+        {
+            "originalPath": "./Gerador/staticFiles/delete.png",
+            "destinationPath": "./Publish/Public/images/delete.png"
+        },
+        {
+            "originalPath": "./Gerador/staticFiles/edit.png",
+            "destinationPath": "./Publish/Public/images/edit.png"
+        },
+        {
+            "originalPath": "./Gerador/staticFiles/read.png",
+            "destinationPath": "./Publish/Public/images/read.png"
+        },
+        {
+            "originalPath": "./Gerador/staticFiles/main.css",
+            "destinationPath": "./Publish/Public/css/main.css"
+        }
+    ],
+    "frontoffice": [
+        {
+            "model": "Movie",
+            "property": "stars",
+            "order": "DESC",
+            "limit": 3
+        }
+    ]
+}

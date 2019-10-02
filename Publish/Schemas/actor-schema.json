@@ -1,0 +1,37 @@
+{
+    "title": "Actor",
+    "description": "a film actor",
+    "type": "object",
+    "properties": {
+        "name": {
+            "description": "Name of the actor",
+            "type": "string",
+            "maxLength":256
+        },
+        "gender": {
+			"description": "Gender of the actor",
+            "type": "string",
+            "enum": ["male", "female"]
+        },
+        "age": {
+            "description": "Age in years which must be equal to or greater than zero.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum":150
+          }
+    },
+    "searchProperty":"name",
+    "required": [
+        "name",
+        "gender",
+        "age"
+    ],
+    "references":[
+        {
+            "model": "Movie",
+            "relation": "M-M",
+            "required": true,
+            "label":"name"
+        }
+    ]
+}

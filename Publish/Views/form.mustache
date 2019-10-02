@@ -1,0 +1,142 @@
+<html>
+    <head>
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script><!-- changed from google serialize API, didn't support inputs with type=number -->
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    </head>
+    <body>
+        {{>menu}}
+        <form id="form" class="content"><!-- must be defined dinamically-->
+            {{#properties}}
+            <div class="input-container">
+                <label style="display:block;">{{name}}:</label>
+                <input type="{{type}}" name="{{name}}" {{#value}} value="{{value}}" {{/value}} {{{minlength}}} {{{maxlength}}} {{{pattern}}} {{{min}}} {{{max}}} {{required}}></input>
+            </div>
+            {{/properties}}
+            <input type="submit" value="submit"></input>
+        </form>
+    </body>
+</html>
+
+<script>
+window.onload= ()=>{
+    var form = document.getElementById('form');
+    
+    form.onsubmit = (e) => {
+        e.preventDefault();
+        let xhr = new XMLHttpRequest();
+        xhr.open("{{method}}", "/../../api/{{title}}/{{id}}", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+               location.href="./";
+            }
+        }
+
+        xhr.send($("form").serialize());
+    }
+    {{#references}}
+            {{^isMM}}
+                loadValues1M('{{model}}', '{{values}}', '{{label}}', 'form');
+            {{/isMM}}
+            {{#isMM}}
+                loadValuesMM('{{model}}', '{{values}}', '{{label}}', 'form');
+            {{/isMM}}
+    {{/references}}
+}
+{{#hasReferences}}
+function loadValues1M(model, values, label, formID) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", `../../../api/${model}/`, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var form = document.getElementById(formID);
+                    var select = document.createElement('select');
+                    select.name=model.toLowerCase()+"_id";
+                    var response = JSON.parse(this.responseText);
+                    if (response.constructor === Array){
+                        response.map(row => {
+                            var option = document.createElement("option");
+                            let id= "id";
+                            option.value = row[id.toLowerCase()];
+                            option.textContent=""+row[label];
+                            select.appendChild(option);
+                        });
+                    }
+                    else{
+                        var option = document.createElement("option");
+                        let id= "id";
+                        option.value = response[id.tolowerCase()];
+                        option.textContent=response[label];
+                        select.appendChild(option);
+                    }
+                    var div = document.createElement("div");
+                    div.className+="input-container";
+                    var lbl = document.createElement("label");
+                    lbl.textContent=model+": ";
+                    lbl.style.display="block";
+                    div.appendChild(lbl);
+                    div.appendChild(select);
+                    form.insertBefore(div, form.lastElementChild);
+                }
+            }
+            xhr.send();
+        }
+        function loadValuesMM(model, values, label, formID) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", `../../../api/${model}/`, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var form = document.getElementById(formID);
+                    var mainDiv = document.createElement('div');
+                    var response = JSON.parse(this.responseText);
+                    console.log(this.responseText);
+                    if (response.constructor === Array){
+                        response.map(row => {
+                            var checkboxDiv=document.createElement("div");
+                            var checkbox = document.createElement("input");
+                            var checkboxLabel=document.createElement("label");
+
+                            checkbox.type="checkbox";
+                            checkbox.name=model;
+                            let id= "id";
+                            checkbox.value = row[id.toLowerCase()];
+                            checkbox.id=model+row[id.toLowerCase()];
+                            
+                            checkboxLabel.htmlFor=checkbox.id;
+                            checkboxLabel.textContent=row[label];
+                            checkboxDiv.appendChild(checkbox);
+                            checkboxDiv.appendChild(checkboxLabel);
+                            mainDiv.appendChild(checkboxDiv);
+                        });
+                    }
+                    else{
+                        var checkboxDiv=document.createElement("div");
+                        var checkbox = document.createElement("input");
+                        var checkboxLabel=document.createElement("label");
+
+                        checkbox.type="checkbox";
+                        checkbox.name=model;
+                        let id= "id";
+                        checkbox.value = response[id.toLowerCase()];
+                        checkbox.id=model+response[id.toLowerCase()];
+                            
+                        checkboxLabel.htmlFor=checkbox.id;
+                        checkboxLabel.textContent=response[label];
+                        checkboxDiv.appendChild(checkbox);
+                        checkboxDiv.appendChild(checkboxLabel);
+                        mainDiv.appendChild(checkboxDiv);
+                    }
+                    var div = document.createElement("div");
+                    div.className+="input-container";
+                    var lbl = document.createElement("label");
+                    lbl.textContent=model+": ";
+                    div.appendChild(lbl);
+                    div.appendChild(mainDiv);
+                    form.insertBefore(div, form.lastElementChild);
+                }
+            }
+            xhr.send();
+        }
+{{/hasReferences}}
+</script>

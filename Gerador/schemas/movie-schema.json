@@ -1,0 +1,50 @@
+{
+    "title": "Movie",
+    "description": "a cinema film",
+    "type": "object",
+    "properties": {
+        "name": {
+            "description": "Name of the film",
+            "type": "string",
+            "maxLength": 256
+        },
+        "stars": {
+            "description": "The stars of the film",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5
+        },
+        "date": {
+            "description": "Date of the realise of the film",
+            "format": "date",
+            "formatMinimum": "2000-01-01",
+            "type": "string"
+        }
+    },
+    "searchProperty":"name",
+    "required": [
+        "name",
+        "stars",
+        "date"
+    ],
+    "references": [
+        {
+            "model": "Tag",
+            "relation": "M-M",
+            "required": true,
+            "label":"tagname"
+        },
+        {
+            "model": "Actor",
+            "relation": "M-M",
+            "required": true,
+            "label":"name"
+        },
+        {
+            "model": "Director",
+            "relation": "1-M",
+            "required": true,
+            "label":"name"
+        }
+    ]
+}

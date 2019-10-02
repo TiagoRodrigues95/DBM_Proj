@@ -1,0 +1,63 @@
+var database = require('../Database/sqlitedbm.js')('./Publish/Database/{{dbname}}');
+
+class {{classTitle}} {
+    constructor ({{classProperties}}) {
+        Object.defineProperty(this,'{{primaryKey.propertyName}}',{ 
+                enumerable:true,
+                writable:true    
+            });
+        {{{classConstructor}}}
+    }
+}
+
+{{classTitle}}.all = function (callback) {
+    database.where("SELECT * FROM {{{tableName}}}", [], {{{classTitle}}}, callback);
+}
+
+{{classTitle}}.get = function (id, callback) {
+    database.where("SELECT * FROM {{{tableName}}} WHERE {{{primaryKey.columnName}}} = ?", [id], {{{classTitle}}}, callback);
+}
+
+//TODO update e verificar insert
+{{classTitle}}.prototype.save = function (callback) {
+    if(this.{{primaryKey.propertyName}}) { //Se existir valor no id será para update
+     database.run("UPDATE {{tableName}} SET {{{propertiesUpdate}}} {{#references}} {{^isMM}},{{model}}_id =?{{/isMM}} {{/references}} WHERE {{{primaryKey.columnName}}} = ?", [{{propertiesThis}}{{#references}} {{^isMM}},this.{{model}}_id{{/isMM}} {{/references}}, this.{{primaryKey.propertyName}}],callback);
+    } else { //caso contrário para insert
+        database.run("INSERT INTO {{{tableName}}} ({{{classProperties}}} {{#references}} {{^isMM}},{{model}}_id{{/isMM}} {{/references}}) VALUES ({{{propertiesParams}}}{{#references}} {{^isMM}},?{{/isMM}} {{/references}})",
+        [{{propertiesThis}}{{#references}} {{^isMM}},this.{{model}}_id{{/isMM}} {{/references}}], callback);
+    }
+}
+
+{{classTitle}}.delete = function (id, callback) {
+    database.get("DELETE FROM {{{tableName}}} WHERE {{{primaryKey.columnName}}} = ? ",[id], {{{classTitle}}}, callback);
+}
+
+{{classTitle}}.many = function (model, id, callback) {
+    var tablename = relationManyToManyTableName("{{tableName}}",model);
+    database.where(`SELECT {{tableName}}.* FROM {{tableName}} INNER JOIN ${tablename} ON
+        ${tablename}.{{primaryKey.columnName}} = {{tableName}}.{{primaryKey.columnName}} WHERE ${tablename}.${model.toLowerCase()}_id = ?`, [id],
+        {{classTitle}}, callback);
+}
+
+
+{{classTitle}}.mappingDBtoObject = {
+  {{{primaryKey.columnName}}} : "{{{primaryKey.propertyName}}}",
+  {{{mappingDBtoObject}}}
+}
+
+{{classTitle}}.top = function (property,order,limit,callback) {
+	var dbprop = Object.keys({{classTitle}}.mappingDBtoObject).find(function(key) {
+	          return {{classTitle}}.mappingDBtoObject[key] == property;    
+	});
+	database.where(`SELECT * FROM {{classTitle}} ORDER BY ${dbprop} ${order} LIMIT ${limit}`, [], {{classTitle}},callback);
+}
+
+function relationManyToManyTableName(tableA,tableB){
+    var array = [];
+    array.push(tableA,tableB);
+    array.sort();
+    let tableName = array.join("_");
+    return tableName;
+}
+
+module.exports={{{classTitle}}};

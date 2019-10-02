@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS {{childTable}}_{{parentTable}}(
+    {{childTable}}_id INTEGER NOT NULL,
+    {{parentTable}}_id INTEGER NOT NULL,
+    PRIMARY KEY ({{childTable}}_id , {{parentTable}}_id),
+    FOREIGN KEY ({{childTable}}_id) REFERENCES {{childTable}}({{childTable}}_id),
+    FOREIGN KEY ({{parentTable}}_id) REFERENCES {{parentTable}}({{parentTable}}_id)
+)

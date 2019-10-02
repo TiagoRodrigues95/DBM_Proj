@@ -1,0 +1,24 @@
+{
+    "title": "Tag",
+    "description": "a film tag",
+    "type": "object",
+    "properties": {
+        "tagname": {
+            "description": "Name of the tag",
+            "type": "string",
+            "maxLength":256
+        }
+    },
+    "searchProperty":"tagname",
+    "required": [
+        "tagname"
+    ],
+    "references":[
+        {
+            "model": "Movie",
+            "relation": "M-M",
+            "required": true,
+            "label":"name"
+        }
+    ]
+}
